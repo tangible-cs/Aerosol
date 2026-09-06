@@ -35,6 +35,7 @@
   file:
     path: /etc/systemd/resolved.conf.d
     state: directory
+  when: not (local_http_only | default(false) | bool)
 
 - name: Disable systemd-resolved stub listener (frees port 53 for coredns)
   become: yes
@@ -43,6 +44,7 @@
     content: "[Resolve]\nDNSStubListener=no\n"
     dest: /etc/systemd/resolved.conf.d/no-stub.conf
   register: resolved_conf
+  when: not (local_http_only | default(false) | bool)
 
 - name: Restart systemd-resolved
   become: yes
@@ -50,4 +52,6 @@
   systemd:
     name: systemd-resolved
     state: restarted
-  when: resolved_conf.changed
+  when:
+    - not (local_http_only | default(false) | bool)
+    - resolved_conf.changed

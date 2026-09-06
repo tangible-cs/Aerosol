@@ -50,6 +50,7 @@
     # Allow become: yes in pixi.yml to escalate from host back to root
     ansible_become_method: sudo
   tasks:
+    - import_tasks: tasks/reclaim_pixi.yml
     - import_tasks: tasks/pixi.yml
     - import_tasks: tasks/coredns.yml
       when: not (local_http_only | default(false) | bool)
