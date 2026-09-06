@@ -32,6 +32,7 @@ OPEN_CLAIM="false"
 PUBLIC_IP_OVERRIDE=""
 ACME_KEY_SRC=""
 ACME_EMAIL=""
+USE_EXISTING_CHECKOUT="false"
 
 usage() {
     echo "Usage: $0 --domain <domain> [--branch <branch>] [--repo <repo-url>] [--local-http-only]"
@@ -42,6 +43,7 @@ usage() {
     echo "                      subdomain routing, not TLS/DNS -- include the port"
     echo "                      (e.g. lvh.me:8080), since the router builds absolute"
     echo "                      URLs from it and without it they point at :80."
+    echo "  --use-existing-checkout  Provision /home/host/openhost at its current commit, without fetching or resetting it."
     echo "  --branch            Git branch to deploy (default: main)"
     echo "  --repo              Git repo URL (default: cloud-in-a-bottle/cloud-in-a-bottle)"
     echo "  --local-http-only   HTTP-only localhost mode: no TLS, CoreDNS, or Caddy."
@@ -76,6 +78,7 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --use-existing-checkout) USE_EXISTING_CHECKOUT="true"; shift ;;
         --domain)           DOMAIN="$2"; shift 2 ;;
         --branch)           BRANCH="$2"; shift 2 ;;
         --repo)             REPO_URL="$2"; shift 2 ;;
@@ -140,7 +143,10 @@ su host -c "git config --global --replace-all http.version HTTP/1.1"
 
 # ---- Clone the repo ----
 echo "--- Cloning Cloud in a Bottle ($BRANCH) ---"
-if [ -d "$OPENHOST_DIR/.git" ]; then
+if [ "$USE_EXISTING_CHECKOUT" = "true" ]; then
+    git -C "$OPENHOST_DIR" rev-parse --verify HEAD >/dev/null
+    echo "Using the existing committed checkout without changing its revision."
+elif [ -d "$OPENHOST_DIR/.git" ]; then
     cd "$OPENHOST_DIR"
     su host -c "git fetch origin"
     su host -c "git checkout $BRANCH"
