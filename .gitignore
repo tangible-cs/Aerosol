@@ -45,3 +45,7 @@ specs/
 # mdBook build output
 docs/book/
 
+# Aerosol local runtimes, guest disks, keys, logs and downloads
+.aerosol/
+image/cache/
+image/out/

@@ -1,0 +1,28 @@
+# Aerosol: native Ubuntu guest, no host filesystem sharing.
+minimumLimaVersion: 2.2.0
+vmType: vz
+arch: aarch64
+images:
+  - location: https://cloud-images.ubuntu.com/releases/noble/release-20260705/ubuntu-24.04-server-cloudimg-arm64.img
+    arch: aarch64
+    digest: sha256:7df0201546f75b8bcc1044594c806c35749421ad3c9bc1be2a3ab806cfae39cc
+cpus: __CPUS__
+memory: __MEMORY__GiB
+disk: __DISK__GiB
+mounts: []
+containerd:
+  system: false
+  user: false
+ssh:
+  loadDotSSHPubKeys: false
+  forwardAgent: false
+rosetta:
+  enabled: false
+  binfmt: false
+portForwards:
+  - guestIP: 0.0.0.0
+    guestPort: 8080
+    hostIP: 127.0.0.1
+    hostPort: __PORT__
+  - guestPortRange: [1, 65535]
+    ignore: true
