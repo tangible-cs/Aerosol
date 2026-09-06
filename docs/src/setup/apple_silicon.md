@@ -60,7 +60,7 @@ Keep `vmType: vz`, `arch: aarch64`, no mounts, and loopback forwarding. Do not s
 
 `./scripts/aerosol doctor` checks the guest's CPU architecture, Ubuntu version, filesystem, memory, service state, rootless Podman, and the dashboard connection. `logs` shows recent router and archive-service logs. First-install output is printed to the terminal; keep it with `./scripts/aerosol up 2>&1 | tee install.log` if diagnosing a fresh install.
 
-If provisioning fails, rerun `up` from the same committed revision. A completion marker is written only after the service starts. Retrying never overwrites a guest checkout with a different revision. Resolve network failures before retrying. If the launcher was forcibly terminated, verify no installation is still running before removing the empty `.aerosol/up.lock` directory.
+If provisioning fails, rerun `up`. The initial source bundle is reused even if you have since made more commits on the Mac. A completion marker is written only after the service starts. Retrying never overwrites a guest checkout with a different revision. Resolve network failures before retrying. If the launcher was forcibly terminated, verify no installation is still running before removing the empty `.aerosol/up.lock` directory.
 
 An occupied port fails before creating a new VM. Use `--port` at first creation. For a restarted VM, inspect `lsof -nP -iTCP:8080 -sTCP:LISTEN` on the Mac for conflicts. Never kill an unrelated application to free the port automatically.
 
