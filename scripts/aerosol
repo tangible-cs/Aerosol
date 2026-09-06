@@ -16,6 +16,7 @@ Usage: ./scripts/aerosol <command> [options]
   status   Show VM status
   doctor   Check guest services, architecture, storage and dashboard
   logs     Show recent guest service logs
+  tailnet  Enable private Tailscale access and protect initial owner setup
   shell    Open a shell in the Ubuntu guest
   config   Print the VM configuration without changing anything
   help     Show this help
@@ -34,7 +35,7 @@ COMMAND="${1:-help}"
 [[ $# -eq 0 ]] || shift
 case "$COMMAND" in
     help|-h|--help) usage; exit 0 ;;
-    up|stop|status|doctor|logs|shell|config) ;;
+    up|stop|status|doctor|logs|shell|tailnet|config) ;;
     *) fail "Unknown command: $COMMAND" ;;
 esac
 while [[ $# -gt 0 ]]; do
@@ -67,7 +68,12 @@ wait_dashboard() {
     local attempt
     for ((attempt=0; attempt<90; attempt++)); do
         if curl --noproxy '*' -fsS --max-time 2 --max-filesize 4096 "http://127.0.0.1:$PORT/health" 2>/dev/null | grep -Eq '^[[:space:]]*\{"status":[[:space:]]*"ok"\}[[:space:]]*$'; then
-            echo "Aerosol is ready: http://lvh.me:$PORT/"
+            if [[ -f "$STATE/tailnet-domain" ]]; then
+                echo "Aerosol is ready: http://$(cat "$STATE/tailnet-domain")/"
+                echo "If unclaimed, open the private URL in .aerosol/tailnet-setup.url"
+            else
+                echo "Aerosol is ready: http://lvh.me:$PORT/"
+            fi
             return
         fi
         sleep 2
@@ -111,6 +117,7 @@ fi
 [[ -x "$LIMA" && -f "$LIMA_HOME/aerosol/lima.yaml" ]] || fail "No Aerosol VM installed. Run ./scripts/aerosol up"
 PORT="$(cat "$STATE/port")"
 case "$COMMAND" in
+    tailnet) exec python3 "$ROOT/macos/tailnet.py" ;;
     stop) "$LIMA" stop --tty=false aerosol ;;
     status) "$LIMA" list aerosol ;;
     logs) shell_guest sudo journalctl -u openhost -u openhost-juicefs --no-pager -n 100 ;;
