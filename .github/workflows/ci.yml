@@ -74,3 +74,19 @@ jobs:
         run: |
           find /tmp -name router.log 2>/dev/null | while read -r f; do echo "=== $f ==="; tail -100 "$f"; done
           for c in $(pixi run -e dev podman ps -a --format '{{.Names}}'); do echo "=== podman logs $c ==="; pixi run -e dev podman logs --tail 50 "$c" 2>&1; done
+
+  mac-launcher:
+    strategy:
+      matrix:
+        os: [macos-14, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          pixi-version: v0.70.2
+          environments: dev
+      - name: Check Mac launcher and guest provisioning regressions
+        run: pixi run -e dev pytest -x tests/macos
+      - name: Check shell syntax
+        run: bash -n scripts/aerosol macos/install-lima.sh macos/provision-guest.sh scripts/provision.sh

@@ -1,3 +1,17 @@
+# Aerosol
+
+An Apple Silicon fork of [Cloud in a Bottle](https://github.com/cloud-in-a-bottle/cloud-in-a-bottle). Run the existing platform in a native ARM64 Ubuntu VM on your M-series Mac.
+
+```bash
+./scripts/aerosol up
+```
+
+Then open **http://lvh.me:8080/** to create your owner account. [Mac installation and operation guide](docs/src/setup/apple_silicon.md).
+
+The launcher keeps services and app data inside Ubuntu, uses Apple hardware virtualization, and exposes the dashboard only on localhost. The upstream project, license, documentation, and server workflows are preserved below.
+
+---
+
 <div align="center">
   <h1>Cloud in a Bottle</h1>
   <p><em>Your corner of the cloud.</em></p>

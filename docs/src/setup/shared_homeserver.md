@@ -6,10 +6,12 @@ Cloud in a Bottle wants to install directly on the host. It runs various system 
 
 This page is in two parts. Part 1 gets a working instance running inside a VM from our pre-built image. [Part 2](#part-2-taking-it-public) covers the networking and config if you want to put it on the public internet.
 
+For M-series Macs, use [Aerosol on Apple Silicon](./apple_silicon.md). The image instructions below describe the existing x86 release artifacts.
+
 ## Part 1: download and run the VM image
 
 Requirements:
-- an x86-64 processor (ie not an ARM processor like a Mac M-series). We plan to build ARM images in the future.
+- an x86-64 processor (ie not an ARM processor like a Mac M-series). Use the Apple Silicon guide above for native ARM Ubuntu.
 - support for hardware virtualization. Most CPUs support this as long as you're running on bare metal, ie not already in a VM (VPS, EC2 instance, etc). It'll work without this but would be very slow.
 - a virtual machine host, like QEMU, VirtualBox, VMWare, etc. If you don't already have a preference, we suggest QEMU.
   - on ubuntu: `apt install qemu-system-x86 qemu-utils`
