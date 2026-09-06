@@ -66,7 +66,7 @@ shell_guest() { "$LIMA" shell --workdir /tmp aerosol "$@"; }
 wait_dashboard() {
     local attempt
     for ((attempt=0; attempt<90; attempt++)); do
-        if curl --noproxy '*' -fsS --max-time 2 "http://127.0.0.1:$PORT/health" -o /dev/null; then
+        if curl --noproxy '*' -fsS --max-time 2 --max-filesize 4096 "http://127.0.0.1:$PORT/health" 2>/dev/null | grep -Eq '^[[:space:]]*\{"status":[[:space:]]*"ok"\}[[:space:]]*$'; then
             echo "Aerosol is ready: http://lvh.me:$PORT/"
             return
         fi
@@ -96,8 +96,11 @@ if [[ "$COMMAND" == up ]]; then
         "$LIMA" start --tty=false --name=aerosol "$STATE/aerosol.yaml"
     fi
     if ! shell_guest test -f /var/lib/aerosol/provisioned; then
-        echo "Installing the current committed source in Ubuntu. This can take 10-20 minutes."
-        git -C "$ROOT" bundle create "$STATE/source.bundle" HEAD
+        echo "Installing the committed source snapshot in Ubuntu. This can take 10-20 minutes."
+        if [[ ! -f "$STATE/source.bundle" ]]; then
+            git -C "$ROOT" bundle create "$STATE/source.bundle.part" HEAD
+            mv "$STATE/source.bundle.part" "$STATE/source.bundle"
+        fi
         "$LIMA" copy "$STATE/source.bundle" aerosol:/tmp/aerosol-source.bundle
         "$LIMA" copy "$ROOT/macos/provision-guest.sh" aerosol:/tmp/aerosol-provision.sh
         shell_guest sudo bash /tmp/aerosol-provision.sh "$PORT"

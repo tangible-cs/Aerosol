@@ -29,10 +29,12 @@ def installation(tmp_path):
     executable(bin_dir / "uname", 'if [[ "$1" == -s ]]; then echo Darwin; else echo arm64; fi\n')
     executable(bin_dir / "sw_vers", "echo 26.0\n")
     executable(bin_dir / "id", "echo 501\n")
-    executable(bin_dir / "curl", 'printf "%s\\n" "$*" >> "$HTTP_CALLS"\n[[ "$*" == *":9080/health"* ]]\n')
+    executable(
+        bin_dir / "curl",
+        'printf "%s\\n" "$*" >> "$HTTP_CALLS"\n[[ "$*" == *":9080/health"* ]]\nprintf \'{"status":"ok"}\'\n',
+    )
     executable(bin_dir / "sleep", "exit 0\n")
     env = dict(
-        os.environ,
         PATH=f"{bin_dir}:{os.environ['PATH']}",
         CALLS=str(tmp_path / "calls"),
         HTTP_CALLS=str(tmp_path / "http"),
@@ -76,3 +78,25 @@ def test_another_up_operation_is_not_interrupted(installation):
     assert "Another up operation" in result.stderr
     assert (installation[1] / ".aerosol/up.lock").exists()
     assert not (installation[1] / "calls").exists()
+
+
+def test_unrelated_http_page_is_not_reported_as_healthy(installation):
+    _, root, _ = installation
+    executable(root / "bin/curl", 'echo "<html>Another server</html>"\n')
+    result = run(installation, "up")
+    assert result.returncode != 0
+    assert "Dashboard not ready" in result.stderr
+
+
+def test_failed_install_reuses_its_original_source_bundle(installation):
+    _, root, _ = installation
+    bundle = root / ".aerosol/source.bundle"
+    bundle.write_text("original source snapshot")
+    executable(
+        root / ".aerosol/tools/bin/limactl",
+        'printf "%s\\n" "$*" >> "$CALLS"\n[[ "$*" != *"test -f /var/lib/aerosol/provisioned"* ]]\n',
+    )
+    executable(root / "bin/git", 'echo "Source unexpectedly replaced" >&2; exit 1\n')
+    result = run(installation, "up")
+    assert result.returncode == 0, result.stderr
+    assert bundle.read_text() == "original source snapshot"
