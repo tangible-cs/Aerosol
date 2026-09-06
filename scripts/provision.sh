@@ -144,7 +144,7 @@ su host -c "git config --global --replace-all http.version HTTP/1.1"
 # ---- Clone the repo ----
 echo "--- Cloning Cloud in a Bottle ($BRANCH) ---"
 if [ "$USE_EXISTING_CHECKOUT" = "true" ]; then
-    git -C "$OPENHOST_DIR" rev-parse --verify HEAD >/dev/null
+    su host -c "git -C $OPENHOST_DIR rev-parse --verify HEAD" >/dev/null
     echo "Using the existing committed checkout without changing its revision."
 elif [ -d "$OPENHOST_DIR/.git" ]; then
     cd "$OPENHOST_DIR"

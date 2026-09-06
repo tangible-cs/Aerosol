@@ -9,7 +9,7 @@ def test_provisioner_can_use_the_exact_bundled_checkout():
     assert "--use-existing-checkout" in result.stdout
     source = (ROOT / "scripts/provision.sh").read_text()
     assert 'if [ "$USE_EXISTING_CHECKOUT" = "true" ]; then' in source
-    assert 'git -C "$OPENHOST_DIR" rev-parse --verify HEAD' in source
+    assert 'su host -c "git -C $OPENHOST_DIR rev-parse --verify HEAD"' in source
 
 
 def test_guest_installer_refuses_to_run_on_macos_before_doing_anything():
