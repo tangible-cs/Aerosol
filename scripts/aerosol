@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STATE="$ROOT/.aerosol"
 export LIMA_HOME="$STATE/lima"
-export LIMA_CACHE_HOME="$STATE/cache"
 LIMA="$STATE/tools/bin/limactl"
 CPUS=4 MEMORY=4 DISK=60 PORT=8080
 OVERRIDES=false
@@ -67,7 +66,7 @@ shell_guest() { "$LIMA" shell --workdir /tmp aerosol "$@"; }
 wait_dashboard() {
     local attempt
     for ((attempt=0; attempt<90; attempt++)); do
-        if curl --noproxy '*' -fsS --max-time 2 "http://127.0.0.1:$PORT/setup" -o /dev/null; then
+        if curl --noproxy '*' -fsS --max-time 2 "http://127.0.0.1:$PORT/health" -o /dev/null; then
             echo "Aerosol is ready: http://lvh.me:$PORT/"
             return
         fi
@@ -111,11 +110,11 @@ PORT="$(cat "$STATE/port")"
 case "$COMMAND" in
     stop) "$LIMA" stop --tty=false aerosol ;;
     status) "$LIMA" list aerosol ;;
-    logs) shell_guest sudo journalctl -u openhost -u openhost-system-agent --no-pager -n 100 ;;
+    logs) shell_guest sudo journalctl -u openhost -u openhost-juicefs --no-pager -n 100 ;;
     shell) "$LIMA" shell --workdir /home/host/openhost aerosol ;;
     doctor)
         "$LIMA" list aerosol
-        shell_guest bash -c 'set -e; uname -m; cat /etc/os-release; findmnt -no FSTYPE /home; df -h /; free -h; systemctl is-active openhost; sudo -iu host bash -c "cd /home/host/openhost && /home/host/.pixi/bin/pixi run podman info --format json"'
+        shell_guest bash -c 'set -e; uname -m; cat /etc/os-release; findmnt --target /home -no FSTYPE; df -h /; free -h; systemctl is-active openhost; sudo -iu host bash -c "cd /home/host/openhost && /home/host/.pixi/bin/pixi run podman info --format json"'
         wait_dashboard
         ;;
 esac

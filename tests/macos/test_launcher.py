@@ -22,7 +22,7 @@ def test_native_guest_is_isolated_and_does_not_install_a_second_container_runtim
     assert "base" not in config
     assert config["containerd"] == {"system": False, "user": False}
     assert config["ssh"]["forwardAgent"] is False
-    assert config["rosetta"]["enabled"] is False
+    assert config["vmOpts"]["vz"]["rosetta"]["enabled"] is False
     assert all(image["digest"].startswith("sha256:") for image in config["images"])
     assert config["portForwards"][0]["hostIP"] == "127.0.0.1"
     assert config["portForwards"][-1]["ignore"] is True

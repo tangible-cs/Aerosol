@@ -16,9 +16,11 @@ containerd:
 ssh:
   loadDotSSHPubKeys: false
   forwardAgent: false
-rosetta:
-  enabled: false
-  binfmt: false
+vmOpts:
+  vz:
+    rosetta:
+      enabled: false
+      binfmt: false
 portForwards:
   - guestIP: 0.0.0.0
     guestPort: 8080
