@@ -75,3 +75,33 @@ Native ARM64 containers are preferred. Third-party images or downloaded executab
 ```
 
 The development tool is only present if Pixi was installed for development; normal use needs no host Python environment. Native VM integration results and any remaining limits are recorded in `docs/internal/aerosol-validation.md`.
+
+## Private tailnet access
+
+With the Tailscale Mac app already signed in and connected, run:
+
+```bash
+./scripts/aerosol tailnet
+open "$(cat .aerosol/tailnet-setup.url)"
+```
+
+This optional command requires host Python 3.9 or newer. It uses the Mac's existing Tailscale identity, leaving Ubuntu and rootless containers intact. It briefly restarts the guest router, backs up its configuration and SQLite database, and promotes a tailnet domain while preserving the localhost domain. Existing apps may restart to pick up their new canonical URLs. The command refuses conflicting Tailscale port mappings and any enabled Funnel configuration.
+
+The address is `http://aerosol.<hyphenated-Tailscale-IPv4>.sslip.io:<port>/`. Application subdomains resolve to that same private Tailscale IP. MagicDNS device names alone cannot provide the wildcard subdomains used by apps. This default uses a third-party wildcard DNS resolver; clients must be able to resolve it. DNS lookup reveals the hostname to the resolver, but does not make the service public. A DNS outage or DNS-rebinding filter can prevent resolution. Your own wildcard DNS pointing to the Tailscale IP is an alternative, configured through the existing domain settings.
+
+Tailscale Serve forwards TCP only from the tailnet to the Mac's `127.0.0.1` dashboard port. Lima continues to forward no other application ports. No Funnel, router forwarding, public listener, host firewall change, or new Tailscale identity is created. Tailnet access follows your existing Tailscale ACLs/grants: this is not a restriction to a single user if your policy permits other members or shared devices.
+
+The browser URL uses HTTP. Tailscale encrypts transport between devices with WireGuard; there is no browser TLS certificate, so browser features requiring an HTTPS secure context may be unavailable. Use the upstream private-domain/DNS-01 TLS setup if those features are needed. Do not enable Funnel to obtain HTTPS.
+
+Before exposing an unclaimed instance, the command enables the existing claim-token protection and checks that the running setup page rejects a missing token and accepts the private claim link. The link is saved with owner-only permissions in `.aerosol/tailnet-setup.url`, excluded from Git. Do not share it. After claiming the instance, use the dashboard URL printed by `up`; the claim token is consumed by setup.
+
+Serve runs in the background and persists in Tailscale's configuration across restarts. The Mac, Tailscale connection and Aerosol VM must be running. Inspect or disable just this mapping (substitute your chosen port):
+
+```bash
+/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status --json
+/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --tcp=8080 off
+```
+
+Disabling the mapping preserves the VM, its data, owner account, claim protection and domain records. Rerun `./scripts/aerosol tailnet` to reconnect. If the Mac's Tailscale IP changes, rerun it to configure the new canonical hostname. Do not reuse the old hostname.
+
+References: [Tailscale Serve](https://tailscale.com/docs/reference/tailscale-cli/serve), [MagicDNS](https://tailscale.com/docs/features/magicdns), and the project's [home network setup](home_network.md).

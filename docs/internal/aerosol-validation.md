@@ -38,3 +38,17 @@ A host-side probe issued 200 `/health` requests through the VM forwarder with co
 Actual Apple Silicon VM execution was tested locally. CI's Mac job checks launcher behavior with controlled command stubs, not nested virtualization. Public DNS/TLS and remote S3 are retained upstream paths and were not reconfigured on this Mac. Host sleep/wake and every third-party app were not tested; x86-only images and Metal/GPU workloads are outside the native Ubuntu path. The launcher does not promise uninterrupted service while macOS sleeps.
 
 The developer tools, test VMs, downloads and caches were installed as the normal Mac user. System package installation, users, swap, sysctls, service changes and test-container cleanup occurred only inside the dedicated guests. No host sudo, host DNS/firewall changes, login items, or host shared directories were used.
+
+## Tailnet configuration (2026-09-06)
+
+Enabled a persistent Tailscale Serve TCP bridge on the existing Mac identity. The guest remains native ARM64 Ubuntu with rootless containers. No host firewall or router settings changed. Initial setup remains unclaimed and now requires its private claim URL.
+
+Validation:
+
+- All 28 Mac launcher/provisioning/lifecycle/tailnet tests passed. The new tests cover public Funnel refusal, listener conflicts, wildcard app domain matching, configuration/database backups, idempotency, private IP selection, and refusal to expose an unprotected setup page.
+- Ruff, mypy and pre-commit secret checks passed.
+- Live tailnet dashboard health and wildcard app-host health returned 200. Setup without a claim returned 403; the owner-only claim URL returned 200. Repeated configuration succeeded without changing the claim token.
+- `lsof` showed Lima only on `127.0.0.1:8080` and Tailscale only on its private IPv4/IPv6 addresses. Connecting to port 8080 on the Mac's LAN address was refused.
+- Serve status contained only the intended TCP-forward mapping and no enabled `AllowFunnel` configuration.
+
+These checks ran from the host Mac. An independent second-device or external-internet probe was not available. Existing tailnet ACLs were preserved. No real owner account or application was created as part of this configuration; full application behavior after owner setup remains for user acceptance testing. Browser HTTPS and a private wildcard DNS server are not provided by the TCP bridge.
